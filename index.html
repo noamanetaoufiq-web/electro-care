@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electro Care | Magasin Officiel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: white; }
+        .product-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; cursor: pointer; border-radius: 20px; }
+        .product-card:hover { border-color: #22d3ee; transform: translateY(-5px); }
+        .img-container { background: #fff; height: 160px; display: flex; align-items: center; justify-content: center; padding: 10px; border-radius: 18px; margin-bottom: 12px; }
+        .img-container img { max-height: 100%; max-width: 100%; object-fit: contain; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+        .modal.active { display: flex; }
+        .filter-btn.active { background: #22d3ee; color: #000; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <nav class="sticky top-0 z-50 bg-slate-950/90 border-b border-white/5 py-5 px-6 flex justify-between items-center">
+        <h1 class="text-xl font-black italic uppercase tracking-tighter">ELECTRO<span class="text-cyan-400">CARE</span></h1>
+        <a href="https://wa.me/212617362196" class="bg-[#25d366] text-white px-4 py-2 rounded-full text-[10px] font-black flex items-center gap-2">
+            <i class="fab fa-whatsapp text-lg"></i> WHATSAPP
+        </a>
+    </nav>
+
+    <div class="sticky top-[72px] z-40 bg-slate-950/95 border-b border-white/5 py-4 overflow-x-auto no-scrollbar">
+        <div class="container mx-auto px-6 flex gap-3">
+            <button onclick="renderGrid('all', this)" class="filter-btn active px-6 py-2 rounded-xl border border-white/10 text-[10px] font-black uppercase whitespace-nowrap">Tout l'Stock</button>
+            <button onclick="renderGrid('iphone', this)" class="filter-btn px-6 py-2 rounded-xl border border-white/10 text-[10px] font-black uppercase whitespace-nowrap">iPhones</button>
+            <button onclick="renderGrid('samsung', this)" class="filter-btn px-6 py-2 rounded-xl border border-white/10 text-[10px] font-black uppercase whitespace-nowrap">Samsung</button>
+            <button onclick="renderGrid('pc', this)" class="filter-btn px-6 py-2 rounded-xl border border-white/10 text-[10px] font-black uppercase whitespace-nowrap">PC / Laptops</button>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-6 py-8">
+        <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+    </main>
+
+    <div id="pModal" class="modal" onclick="closeM()">
+        <div class="bg-slate-900 w-full max-w-md rounded-[32px] p-6 relative border border-white/10 text-center" onclick="event.stopPropagation()">
+            <div class="bg-white rounded-2xl p-6 mb-6 flex justify-center h-64 shadow-xl">
+                <img id="mImg" src="" class="max-h-full object-contain">
+            </div>
+            <h2 id="mTitle" class="text-2xl font-black text-cyan-400 mb-2"></h2>
+            <p id="mPrice" class="text-xl font-bold text-white mb-6"></p>
+            <a id="mWa" href="" target="_blank" class="w-full bg-[#25d366] text-white py-4 rounded-2xl font-black flex items-center justify-center gap-3">
+                <i class="fab fa-whatsapp text-2xl"></i> COMMANDER
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const inventory = [
+            // IPHONES
+            {cat: 'iphone', name: 'iPhone 16 Pro Max', price: '13,900 DH', img: 'https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-16-pro-max-1.jpg'},
+            {cat: 'iphone', name: 'iPhone 16 Pro', price: '11,800 DH', img: 'https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-16-pro-1.jpg'},
+            {cat: 'iphone', name: 'iPhone 15 Pro Max', price: '10,500 DH', img: 'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro-max.jpg'},
+            {cat: 'iphone', name: 'iPhone 15', price: '7,400 DH', img: 'https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-15-1.jpg'},
+            {cat: 'iphone', name: 'iPhone 14 Pro', price: '8,200 DH', img: 'https://fdn2.gsmarena.com/vv/pics/apple/apple-iphone-14-pro-1.jpg'},
+            {cat: 'iphone', name: 'iPhone 14 Plus', price: '6,800 DH', img: 'https://m.media-amazon.com/images/I/61BGE6iu4AL._AC_SL1500_.jpg'},
+            {cat: 'iphone', name: 'iPhone 13', price: '5,200 DH', img: 'https://m.media-amazon.com/images/I/71GLMJ7TQiL._AC_SL1500_.jpg'},
+            {cat: 'iphone', name: 'iPhone 11', price: '3,100 DH', img: 'https://m.media-amazon.com/images/I/71i2XhHU3pL._AC_SL1500_.jpg'},
+            
+            // SAMSUNG
+            {cat: 'samsung', name: 'Samsung S24 Ultra', price: '10,200 DH', img:'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g-sm-s928-stylus.jpg"'},
+            {cat: 'samsung', name: 'Samsung S23 Ultra', price: '7,800 DH', img: 'https://fdn2.gsmarena.com/vv/pics/samsung/samsung-galaxy-s23-ultra-5g-1.jpg'},
+            {cat: 'samsung', name: 'Samsung Z Fold 6', price: '14,500 DH', img: 'https://fdn2.gsmarena.com/vv/pics/samsung/samsung-galaxy-z-fold6-1.jpg'},
+            {cat: 'samsung', name: 'Samsung Z Flip 6', price: '8,900 DH', img: 'https://fdn2.gsmarena.com/vv/pics/samsung/samsung-galaxy-z-flip6-1.jpg'},
+            {cat: 'samsung', name: 'Samsung A55', price: '3,600 DH', img: 'https://fdn2.gsmarena.com/vv/pics/samsung/samsung-galaxy-a55-1.jpg'},
+            {cat: 'samsung', name: 'Samsung A35', price: '2,900 DH', img: 'https://fdn2.gsmarena.com/vv/pics/samsung/samsung-galaxy-a35-1.jpg'},
+            
+            // PC / LAPTOPS
+            {cat: 'pc', name: 'MacBook Air M3', price: '11,500 DH', img: 'https://m.media-amazon.com/images/I/71f5Eu5lJSL._AC_SL1500_.jpg'},
+            {cat: 'pc', name: 'MacBook Pro M3', price: '17,900 DH', img: 'https://lantre.pl/media/catalog/product/cache/8f71f9d82301fac9884664a57317e337/a/p/apple-macbook-pro-14-m3-pro-12-core-cpu-18-core-gpu-18gb-ram-1tb-ssd-srebrny-silver-mrx73ze-a_1.jpg'},
+            {cat: 'pc', name: 'HP Victus 15', price: '7,500 DH', img: 'https://pcgamercasa.ma/13388-large_default/hp-victus-15-i5-12500h16gb512gbrtx-4060-8gb-156-pc-gamer-casa-MAROC.jpg'},
+            {cat: 'pc', name: 'Asus TUF Gaming', price: '8,900 DH', img: 'https://osaka.ma/wp-content/uploads/2025/04/ASUS-TUF-F17-1.jpg'},
+            {cat: 'pc', name: 'Lenovo Legion 5', price: '11,200 DH', img: 'https://images-cdn.ubuy.com.sa/64d2856857a40a454d6afd87-lenovo-legion-5-15-fhd-intel-core.jpg'},
+            {cat: 'pc', name: 'Dell XPS 13', price: '12,400 DH', img: 'https://www.progear.ma/4878-tm_product_lg/pc-portable-workstation-dell-xps-9640-intel-core-ultra-9-32-go-ram-1-to-ssd-ecran-tactile-uhd.jpg'}
+        ];
+
+        function renderGrid(c, btn) {
+            if(btn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            const g = document.getElementById('grid');
+            g.innerHTML = '';
+            inventory.filter(i => c === 'all' || i.cat === c).forEach(i => {
+                g.innerHTML += `
+                    <div class="product-card p-3" onclick="openP('${i.name.replace(/'/g, "\\'")}', '${i.price}', '${i.img}')">
+                        <div class="img-container">
+                            <img src="${i.img}" loading="lazy" alt="${i.name}">
+                        </div>
+                        <h4 class="text-[10px] font-black uppercase truncate text-center">${i.name}</h4>
+                        <p class="text-cyan-400 font-black text-xs text-center mt-1">${i.price}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function openP(t, p, i) {
+            document.getElementById('mTitle').innerText = t;
+            document.getElementById('mPrice').innerText = p;
+            document.getElementById('mImg').src = i;
+            document.getElementById('mWa').href = "https://wa.me/212617362196?text=Bonjour,%20je%20suis%20interessé%20par:%20" + encodeURIComponent(t);
+            document.getElementById('pModal').classList.add('active');
+        }
+
+        function closeM() { document.getElementById('pModal').classList.remove('active'); }
+        renderGrid('all');
+    </script>
+</body>
+</html>
